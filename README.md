@@ -227,7 +227,7 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   ```
   Dapat dilihat dari output di atas, bahwa data ```rating``` sudah bersih dari missing value
 
-  Selanjutnya, kita akan mengubah tipe data dengan kode di bawah, untuk memastikan setiap kolom memiliki tipe data yang sesuai dengan fungsinya. Kolom ```User_ID``` dan ```Food_ID``` diubah ke tipe ```int```     
+  Selanjutnya, kita akan mengubah tipe data dengan kode di bawah, untuk memastikan setiap kolom memiliki tipe data yang sesuai dengan fungsinya. Kolom ```User_ID``` dan ```Food_ID``` diubah ke tipe ```int``` 
   karena berisi nilai numerik diskrit sebagai identifikasi, sementara kolom ```Rating``` diubah ke tipe ```float``` agar dapat mendukung perhitungan statistik yang lebih fleksibel, seperti rata-rata atau 
   pembobotan dalam model rekomendasi.
 
@@ -255,11 +255,12 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   food['Describe'] = food['Describe'].apply(clean_text)
   ```
 
-## Modeling
+## Modeling and Result
 Pada tahap ini, dilakukan pembangunan dua jenis sistem rekomendasi untuk menyelesaikan permasalahan dalam merekomendasikan makanan kepada pengguna. Dua pendekatan yang digunakan adalah Content-Based Filtering dan Collaborative Filtering, masing-masing dengan algoritma dan data yang berbeda.
 
 1. Content Based Filtering (CBF)
-Pendekatan Content-Based Filtering dilakukan dengan memanfaatkan informasi deskriptif dari makanan, seperti nama, jenis makanan ```C_Type```, dan bahan-bahan makanan (```Describe```). Informasi ini digabungkan ke dalam satu kolom combined, kemudian dilakukan proses vektorisasi menggunakan ***TF-IDF (Term Frequency-Inverse Document Frequency)***.
+   
+    Pendekatan Content-Based Filtering dilakukan dengan memanfaatkan informasi deskriptif dari makanan, seperti nama, jenis makanan ```C_Type```, dan bahan-bahan makanan (```Describe```). Informasi ini digabungkan ke dalam satu kolom combined, kemudian dilakukan proses vektorisasi menggunakan ***TF-IDF (Term Frequency-Inverse Document Frequency)***. TF-IDF merupakan teknik yang mengukur seberapa penting suatu kata dalam sebuah dokumen relatif terhadap seluruh kumpulan dokumen. Kata-kata yang sering muncul di satu dokumen tetapi jarang muncul di dokumen lain akan memiliki bobot lebih tinggi, sehingga membantu membedakan karakteristik unik dari setiap makanan.
 
 Langka-langkah yang dilakukan: 
 - Menggabungkan fitur teks menjadi satu kolom gabungan untuk TF-IDF.
@@ -271,7 +272,7 @@ Langka-langkah yang dilakukan:
    tfidf = TfidfVectorizer(stop_words='english')
    tfidf_matrix = tfidf.fit_transform(food['combined'])
   ```
-- Menghitung kemiripan antar item menggunakan cosine similarity.
+- Menghitung kemiripan antar item menggunakan cosine similarity. Fungsi ```cosine_similarity``` digunakan untuk menghitung cosine similarity antara vektor TF-IDF, yang menghasilkan matriks kemiripan antar semua item makanan.
   ```python
    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
   ```
@@ -296,12 +297,12 @@ Langka-langkah yang dilakukan:
 
     return food_reset[['Name', 'C_Type', 'Describe']].iloc[food_indices]
   ```
-Contoh output rekomendasi dari recommend_food('pasta') mengembalikan daftar makanan yang memiliki konten serupa dengan “pasta”.
+Hasil output rekomendasi dari recommend_food('pasta') mengembalikan daftar makanan yang memiliki konten serupa dengan “pasta”.
 ```python
    recommend_food('pasta')
   ```
 
-```
+
 |                  Name                          |  C_Type |                               Describe                                  |                             
 |------------------------------------------------|---------|-------------------------------------------------------------------------|
 | melted broccoli pasta with capers and anchovies| french  | broccolibread crumbs anchovy fillets garlic capers                      |
@@ -310,15 +311,17 @@ Contoh output rekomendasi dari recommend_food('pasta') mengembalikan daftar maka
 | fish with white sauce                          | italian | fillet fish oil milk flour butter salt ground pepper                    |
 | cheese chicken kebabs                          | indian  | chicken thais garlic paste garlic paste yellow chili powder             |
 
-```
+
+Dapat dilihat bahwa model berhasil merekomendasi kan 5 makanan
    
 Kelebihan dan Kekurangan model ini adalah: 
-- Kelebihan: model ini tidak memerlukan interaksi pengguna lain, lalu model ini juga dapat memberikan rekomendasi untuk pengguna baru (cold-start pada user).
-- Kekurangan: model ini hanya cenderung merekomendasikan makanan yang mirip dengan inputan makanan yang diberikan user. Lalu, model ini juga tidak dapat belajar dari preferensi pengguna lain.
+- **Kelebihan**: model ini tidak memerlukan interaksi pengguna lain, lalu model ini juga dapat memberikan rekomendasi untuk pengguna baru (cold-start pada user).
+- **Kekurangan**: model ini hanya cenderung merekomendasikan makanan yang mirip dengan inputan makanan yang diberikan user. Lalu, model ini juga tidak dapat belajar dari preferensi pengguna lain.
   
    
-3. Collaborative Filtering (CF)
-Pendekatan kedua adalah Collaborative Filtering menggunakan neural network dengan model embedding. Model ini mempelajari hubungan antara pengguna dan makanan berdasarkan histori rating yang diberikan. Setiap User_ID dan Food_ID diubah menjadi representasi numerik menggunakan LabelEncoder, lalu dipetakan ke dalam embedding layer.
+2. Collaborative Filtering (CF)
+   
+   Pendekatan kedua adalah Collaborative Filtering menggunakan neural network dengan model embedding. Model ini mempelajari hubungan antara pengguna dan makanan berdasarkan histori rating yang diberikan. Setiap     User_ID dan Food_ID diubah menjadi representasi numerik menggunakan LabelEncoder, lalu dipetakan ke dalam embedding layer.
 
 Langka-langkah yang dilakukan: 
 - Encode ```User_ID``` dan ```Food_ID```.
@@ -329,6 +332,8 @@ Langka-langkah yang dilakukan:
   rating['user'] = user_encoder.fit_transform(rating['User_ID'])
   rating['item'] = item_encoder.fit_transform(rating['Food_ID'])
   ```
+  Hal ini dilakukan karena model hanya dapat memproses input numerik, bukan string.
+  
 - Split data menjadi data latih dan data uji.
   ```python
    x = rating[['user', 'item']].values
@@ -378,46 +383,127 @@ Langka-langkah yang dilakukan:
 Output-nya adalah sebagai berikut.
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/3dc862ca-f276-4250-824f-5acfca712f96" alt="Epoch training" width="600">
+  <img src="https://github.com/user-attachments/assets/27776b90-62bd-4d4e-a88a-5403e58e1530" alt="Epoch training" width="600">
 </p>
 
-Selanjutnya agar lebih jelas, kita akan melakukan visualisasi metrik dengan kode dibawah
-```python
-  plt.plot(history.history['loss'])
-  plt.plot(history.history['mae'])
-  plt.title('model_metrics')
-  plt.ylabel('root_mean_squared_error')
-  plt.xlabel('epoch')
-  plt.legend(['train', 'test'], loc='upper left')
-  plt.show()
+Hasil pelatihan model pada epoch ke-20 menunjukkan bahwa model memiliki performa yang baik pada data training dengan MAE sebesar 1.01, namun terdapat gap cukup besar dibandingkan MAE pada data validasi sebesar 2.83. Hal ini mengindikasikan potensi overfitting, di mana model terlalu menyesuaikan diri dengan data latih sehingga kurang optimal dalam memprediksi data baru. Meskipun begitu, error masih berada dalam skala yang wajar (skala rating 1–10), namun performa dapat ditingkatkan dengan regularisasi atau strategi early stopping.
+
+- Membuat fungsi rekomendasi makanan kepada pengguna tertentu
+  ```python
+    def recommend_for_user(user_Id, top_n=10):
+    user_idx = user_encoder.transform([user_Id])[0]
+    all_items = np.arange(num_items)
+    user_array = np.full_like(all_items, user_idx)
+
+    predictions = model.predict([user_array, all_items], verbose=0).flatten()
+    top_indices = predictions.argsort()[-top_n:][::-1]
+
+    recommended_item_ids = item_encoder.inverse_transform(top_indices)
+
+    return food[food['Food_ID'].isin(recommended_item_ids)][['Food_ID', 'Name', 'C_Type', 'Veg_Non']]
   ```
-Hasil visualisasi:
-
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/bb81e497-ef4f-4410-a890-422fbaba00bb" alt="Epoch training" width="600">
-</p>
-Berdasarkan hasil visualisasi grafik pelatihan model collaborative filtering, terlihat bahwa nilai loss (root mean squared error) dan mean absolute error (MAE) pada data pelatihan dan validasi menurun secara signifikan selama beberapa epoch pertama, lalu cenderung mendatar setelahnya. Hal ini mengindikasikan bahwa model berhasil belajar dengan baik dan mencapai konvergensi. Selisih antara train loss dan validation loss juga tidak terlalu jauh, yang menunjukkan bahwa model tidak mengalami overfitting. Selain itu, nilai MAE validasi yang konsisten di kisaran 2.7 menandakan bahwa prediksi model cukup stabil dan dapat diandalkan untuk merekomendasikan makanan berdasarkan preferensi pengguna. Secara keseluruhan, performa model sudah cukup baik dan stabil untuk digunakan dalam sistem rekomendasi.
+  Tes model dengan kode di bawah:
+  ```python
+    recommend_for_user('5')
+  ```
+  
+  Hasil output rekomendasi dari recommend_for_user('5')
+  
+  | Food_ID |                  Name                    |    C_Type     | Veg_Non |
+  |---------|------------------------------------------|---------------|---------|
+  | 69      | banana and maple ice lollies             | dessert       | veg     |
+  | 94      | chicken sukka                            | indian        | nonveg  |
+  | 105     | chicken tenders                          | snack         | nonveg  |
+  | 127     | cajun spiced turkey wrapped with bacon   | mexican       | nonveg  |
+  | 139     | surmai curry with lobster butter rice    | thai          | veg     |
+  | 172     | zucchini methi pulao                     | indian        | veg     |
+  | 196     | bread dahi vada                          | indian        | veg     |
+  | 273     | corn jalapeno poppers                    | mexican       | veg     |
+  | 276     | apple and pear cake                      | healthy food  | veg     |
+  | 282     | fruit cube salad                         | healthy food  | veg     |
+  
+  Dapat dilihat bahwa model berhasil merekomendasi kan 10 makanan pada user dengan userID 5
 
 Kelebihan dan Kekurangan model ini adalah: 
-- Kelebihan: model ini dapat menangkap pola kompleks dari preferensi pengguna, lalu model ini juga merekomendasi secara lebih personalized karena berdasarkan rating user lain yang mirip.
-- Kekurangan: model ini tidak bisa memberikan rekomendasi jika pengguna baru belum memberikan rating (cold-start problem), lalu model ini membutuhkan interaksi pengguna yang besar.
+- **Kelebihan**: model ini dapat menangkap pola kompleks dari preferensi pengguna, lalu model ini juga merekomendasi secara lebih personalized karena berdasarkan rating user lain yang mirip.
+- **Kekurangan**: model ini tidak bisa memberikan rekomendasi jika pengguna baru belum memberikan rating (cold-start problem), lalu model ini membutuhkan interaksi pengguna yang besar.
 
 Rubrik/Kriteria Tambahan (Opsional): 
 - Menyajikan dua solusi rekomendasi dengan algoritma yang berbeda.
 - Menjelaskan kelebihan dan kekurangan dari solusi/pendekatan yang dipilih.
 
 ## Evaluation
-Pada bagian ini Anda perlu menyebutkan metrik evaluasi yang digunakan. Kemudian, jelaskan hasil proyek berdasarkan metrik evaluasi tersebut.
+Pada tahap evaluasi, digunakan beberapa metrik evaluasi untuk mengukur performa model rekomendasi yang telah dibangun. Metrik yang digunakan disesuaikan dengan jenis model dan tujuan dari sistem rekomendasi. Untuk model Content-Based Filtering (CBF), digunakan metrik Precision@K, sedangkan untuk model Collaborative Filtering (CF) digunakan metrik Mean Squared Error (MSE) dan Mean Absolute Error (MAE).
 
-Ingatlah, metrik evaluasi yang digunakan harus sesuai dengan konteks data, problem statement, dan solusi yang diinginkan.
+1. Evaluasi Content Based Filtering (CBF)
+   Metrik evaluasi yang digunakan untuk menilai performa model Content-Based Filtering (CBF) adalah Precision@K. Metrik ini mengukur seberapa relevan rekomendasi yang diberikan oleh sistem terhadap preferensi pengguna, dalam hal ini berdasarkan kesamaan kategori makanan (C_Type) dengan makanan yang dijadikan input referensi. Dalam implementasinya, precision dihitung dengan membandingkan berapa banyak item dari rekomendasi yang termasuk dalam kategori yang sama dengan makanan input. Formula yang digunakan adalah:
 
-Rubrik/Kriteria Tambahan (Opsional): 
-- Menjelaskan formula metrik dan bagaimana metrik tersebut bekerja.
+   <p align="center">
+    <img src="https://github.com/user-attachments/assets/41a479d9-67f5-4497-80b2-112bb092beab" alt="Epoch training" width="600">
+   </p>
 
----Ini adalah bagian akhir laporan---
+   Kode di bawah ini akan membuat fungsi untuk menghitung precision:
+   ```python
+    def precision_at_k(query_food_name, recommendations, food_data):
+    matches = food_data[food_data['Name'].str.lower().str.contains(query_food_name.lower())]
+    if matches.empty:
+        return f"Makanan '{query_food_name}' tidak ditemukan dalam data."
+
+    # Ambil C_Type dari hasil match pertama
+    query_type = matches.iloc[0]['C_Type'].lower().strip()
+
+    # Hitung jumlah rekomendasi yang punya C_Type yang sama
+    relevant_count = sum(
+        rec_type.lower().strip() == query_type
+        for rec_type in recommendations['C_Type']
+    )
+
+    precision = relevant_count / len(recommendations)
+    return precision
+
+  ```
+
+  Lalu, menghitung precision:
+  ```python
+    recs = recommend_food('kimchi', cosine_sim)
+    precision = precision_at_k('kimchi', recs, food)
+    print(f'Precision: {precision:.2f}')
+  ```
+
+  Output:
+  ```
+  Precision: 0.80
+  ```
+Suatu rekomendasi dikatakan relevan jika memiliki nilai C_Type yang sama dengan makanan acuan. Dalam pengujian dengan input makanan "kimchi", dari lima hasil rekomendasi teratas yang dihasilkan oleh sistem, sebanyak empat memiliki kategori yang sama. Sehingga, nilai Precision@5 yang dihasilkan adalah 0.80, atau 80%.
+   
+2. Evaluasi Collaborative Filtering (CF)
+   
+  Pada model Collaborative Filtering (CF) ini, metrik evaluasi yang digunakan adalah Mean Squared Error (MSE) dan Mean Absolute Error (MAE). MSE digunakan sebagai indikator utama karena mampu memberikan penalti lebih besar terhadap kesalahan prediksi yang tinggi, sehingga lebih sensitif terhadap outlier. Sementara itu, MAE digunakan sebagai pendukung untuk mengukur rata-rata besar kesalahan absolut antara nilai aktual dan prediksi.
+
+
+   Metrik MSE dan MAE dihitung dengan rumus:
+
+   <p align="center">
+    <img src="https://github.com/user-attachments/assets/537846bb-29bd-4816-96e7-c72b5e939bb0" alt="Formula MAE and MSE" width="600">
+   </p>
+
+Pada tahap evaluasi model CF, dilakukannya visualisasi metrik. Kode di bawah ini akan membuat visualisasi metrik:
+```python
+   plt.plot(history.history['loss'])
+   plt.plot(history.history['mae'])
+   plt.title('model_metrics')
+   plt.ylabel('root_mean_squared_error')
+   plt.xlabel('epoch')
+   plt.legend(['train', 'test'], loc='upper left')
+   plt.show()
+  ```
+
+Hasil visualisasi:
+
+  <p align="center">
+    <img src="https://github.com/user-attachments/assets/67961471-1890-4331-9e36-980f7981895c" alt="Visualisasi metrik" width="600">
+  </p>
+Berdasarkan hasil visualisasi grafik pelatihan model collaborative filtering, terlihat bahwa nilai loss (mean squared error) pada data pelatihan dan pengujian menurun secara signifikan selama beberapa epoch pertama, lalu cenderung mendatar setelahnya. Hal ini mengindikasikan bahwa model berhasil belajar dengan baik dan mencapai konvergensi. Selisih antara train loss dan test loss juga tidak terlalu jauh, yang menunjukkan bahwa model tidak mengalami overfitting secara signifikan. Selain itu, nilai MSE pada data pengujian yang konsisten di kisaran rendah menandakan bahwa prediksi model cukup stabil dan dapat diandalkan untuk merekomendasikan item berdasarkan preferensi pengguna. Secara keseluruhan, performa model sudah cukup baik dan stabil untuk digunakan dalam sistem rekomendasi.
+
 ## Referensi
 [1] NVIDIA, "What Is a Recommendation System?" [Online]. Available: https://www.nvidia.com/en-us/glossary/recommendation-system/. [Accessed: 20-May-2025].
-
-Catatan:
-- Anda dapat menambahkan gambar, kode, atau tabel ke dalam laporan jika diperlukan. Temukan caranya pada contoh dokumen markdown di situs editor [Dillinger](https://dillinger.io/), [Github Guides: Mastering markdown](https://guides.github.com/features/mastering-markdown/), atau sumber lain di internet. Semangat!
-- Jika terdapat penjelasan yang harus menyertakan code snippet, tuliskan dengan sewajarnya. Tidak perlu menuliskan keseluruhan kode project, cukup bagian yang ingin dijelaskan saja.
