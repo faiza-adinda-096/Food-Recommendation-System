@@ -42,15 +42,14 @@ Menjelaskan tujuan proyek yang menjawab pernyataan masalah:
   Untuk mencapai goals-goals diatas, pendekatan yang digunakan adalah sebagai berikut:
     - Content-Based Filtering (CBF)
 
-     Model Content-Based Filtering menyarankan makanan berdasarkan kemiripan konten antar makanan. Untuk implementasinya, data seperti nama makanan, deskripsi, dan kategori digabung menjadi satu kesatuan teks,   
-     kemudian direpresentasikan secara numerik menggunakan teknik TF-IDF (Term Frequency–Inverse Document Frequency). Kemudian, cosine similarity digunakan untuk menghitung kemiripan antar makanan. Berdasarkan 
-     makanan yang pernah disukai pengguna, sistem akan menyarankan makanan lain yang memiliki karakteristik serupa.
+      Model Content-Based Filtering menyarankan makanan berdasarkan kemiripan konten antar makanan. Untuk implementasinya, data seperti nama makanan, deskripsi, dan kategori digabung menjadi satu kesatuan teks,        kemudian direpresentasikan secara numerik menggunakan teknik TF-IDF (Term Frequency–Inverse Document Frequency). Kemudian, cosine similarity digunakan untuk menghitung kemiripan antar makanan. Berdasarkan 
+      makanan yang pernah disukai pengguna, sistem akan menyarankan makanan lain yang memiliki karakteristik serupa.
 
     - Collaborative Filtering
 
-       Model Collaborative Filtering menyarankan makanan berdasarkan pola rating dari pengguna lain yang memiliki preferensi serupa. Dalam implementasinya, digunakan model deep learning dengan embedding layer 
-       untuk mempelajari representasi dari pengguna dan makanan. Sistem kemudian memprediksi makanan mana yang kemungkinan besar akan disukai oleh pengguna berdasarkan riwayat interaksi sebelumnya. Berbeda 
-       dengan CBF, pendekatan ini tidak bergantung pada deskripsi makanan, melainkan fokus pada pola perilaku pengguna dalam memberikan rating.
+      Model Collaborative Filtering menyarankan makanan berdasarkan pola rating dari pengguna lain yang memiliki preferensi serupa. Dalam implementasinya, digunakan model deep learning dengan embedding layer 
+      untuk mempelajari representasi dari pengguna dan makanan. Sistem kemudian memprediksi makanan mana yang kemungkinan besar akan disukai oleh pengguna berdasarkan riwayat interaksi sebelumnya. Berbeda 
+      dengan CBF, pendekatan ini tidak bergantung pada deskripsi makanan, melainkan fokus pada pola perilaku pengguna dalam memberikan rating.
       
 
 ## Data Understanding
@@ -210,12 +209,12 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   Pada tahap ini akan dilakukan cleaning data, yaitu menghapus data missing value. Melakukan cleaning data sangat penting karena dapat meningkatkan kualitas dan keakuratan data.
 
   Kode dibawah ini melakukan penghapusan untuk missing value:
-  ```phyton
-  # Menghapus missing value pada data rating
-  rating.dropna(axis=0 ,inplace=True)
+  ```python
+   # Menghapus missing value pada data rating
+   rating.dropna(axis=0 ,inplace=True)
 
-  # Cek kembali missing value
-  print("Missing values in ratings:\n", rating.isnull().sum())
+   # Cek kembali missing value
+   print("Missing values in ratings:\n", rating.isnull().sum())
   ```
 
   Output kode di atas yaitu:
@@ -232,22 +231,24 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   karena berisi nilai numerik diskrit sebagai identifikasi, sementara kolom ```Rating``` diubah ke tipe ```float``` agar dapat mendukung perhitungan statistik yang lebih fleksibel, seperti rata-rata atau 
   pembobotan dalam model rekomendasi.
 
-  ```phyton
-  # Mengubah type data User_ID, Food_ID, dan Rating
-  rating['User_ID'] = rating['User_ID'].astype(int)
-  rating['Food_ID'] = rating['Food_ID'].astype(int)
-  rating['Rating'] = rating['Rating'].astype(float)
+  ```python
+   # Mengubah type data User_ID, Food_ID, dan Rating
+   rating['User_ID'] = rating['User_ID'].astype(int)
+   rating['Food_ID'] = rating['Food_ID'].astype(int)
+   rating['Rating'] = rating['Rating'].astype(float)
   ```
 
-  Lalu, kode dibawah ini akan melakukan cleaning (pembersihan) data teks pada beberapa kolom di dataset makanan, yaitu ```Name```, ```C_Type```, ```Veg_Non```, dan ```Describe```. Tujuan utamanya adalah   
-  menghapus karakter non-alfanumerik (seperti tanda baca dan simbol), serta mengubah semua huruf menjadi huruf kecil. Langkah ini penting agar data lebih konsisten dan tidak terjadi duplikasi yang disebabkan 
+  Lalu, kode dibawah ini akan melakukan cleaning (pembersihan) data teks pada beberapa kolom di dataset makanan, yaitu ```Name```, ```C_Type```, ```Veg_Non```, dan ```Describe```. Tujuan utamanya adalah menghapus
+  karakter non-alfanumerik (seperti tanda baca dan simbol), serta mengubah semua huruf menjadi huruf kecil. Langkah ini penting agar data lebih konsisten dan tidak terjadi duplikasi yang disebabkan 
   oleh perbedaan format penulisan, sehingga hasil analisis atau pemodelan menjadi lebih akurat.
-  ```phyton
-  def clean_text(text):
+  
+  ```python
+   def clean_text(text):
     if isinstance(text, str):
         return re.sub(r'[^a-zA-Z0-9 ]', '', text.lower())
     return ''
 
+  # Menerapkan fungsi pembersihan teks ke kolom-kolom teks pada dataset
   food['Name'] = food['Name'].apply(clean_text)
   food['C_Type'] = food['C_Type'].apply(clean_text)
   food['Veg_Non'] = food['Veg_Non'].apply(clean_text)
@@ -255,7 +256,151 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   ```
 
 ## Modeling
-Tahapan ini membahas mengenai model sisten rekomendasi yang Anda buat untuk menyelesaikan permasalahan. Sajikan top-N recommendation sebagai output.
+Pada tahap ini, dilakukan pembangunan dua jenis sistem rekomendasi untuk menyelesaikan permasalahan dalam merekomendasikan makanan kepada pengguna. Dua pendekatan yang digunakan adalah Content-Based Filtering dan Collaborative Filtering, masing-masing dengan algoritma dan data yang berbeda.
+
+1. Content Based Filtering (CBF)
+Pendekatan Content-Based Filtering dilakukan dengan memanfaatkan informasi deskriptif dari makanan, seperti nama, jenis makanan ```C_Type```, dan bahan-bahan makanan (```Describe```). Informasi ini digabungkan ke dalam satu kolom combined, kemudian dilakukan proses vektorisasi menggunakan ***TF-IDF (Term Frequency-Inverse Document Frequency)***.
+
+Langka-langkah yang dilakukan: 
+- Menggabungkan fitur teks menjadi satu kolom gabungan untuk TF-IDF.
+  ```python
+   food['combined'] = food['Name'] + ' ' + food['C_Type'] + ' '  + ' ' + food['Describe']
+  ```
+- Menerapkan TfidfVectorizer untuk menghasilkan representasi vektor dari teks.
+  ```python
+   tfidf = TfidfVectorizer(stop_words='english')
+   tfidf_matrix = tfidf.fit_transform(food['combined'])
+  ```
+- Menghitung kemiripan antar item menggunakan cosine similarity.
+  ```python
+   cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
+  ```
+- Menggunakan fungsi pencarian berbasis nama makanan untuk mengembalikan 5 rekomendasi teratas berdasarkan kemiripan konten.
+   ```python
+   def recommend_food(input_name, cosine_sim=cosine_sim):
+    # Reset index untuk memastikan urutan index sesuai cosine_sim
+    food_reset = food.reset_index()
+
+    # Cari makanan yang mengandung input keyword (case-insensitive)
+    matches = food_reset[food_reset['Name'].str.lower().str.contains(input_name.lower())]
+    if matches.empty:
+        return f"Makanan yang mengandung '{input_name}' tidak ditemukan dalam data."
+    idx = matches.index[0]
+
+    # Hitung similarity
+    sim_scores = list(enumerate(cosine_sim[idx]))
+    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+    sim_scores = sim_scores[1:6]  # top 5 recommendation
+
+    food_indices = [i[0] for i in sim_scores]
+
+    return food_reset[['Name', 'C_Type', 'Describe']].iloc[food_indices]
+  ```
+Contoh output rekomendasi dari recommend_food('pasta') mengembalikan daftar makanan yang memiliki konten serupa dengan “pasta”.
+```python
+   recommend_food('pasta')
+  ```
+
+```
+|                  Name                          |  C_Type |                               Describe                                  |                             
+|------------------------------------------------|---------|-------------------------------------------------------------------------|
+| melted broccoli pasta with capers and anchovies| french  | broccolibread crumbs anchovy fillets garlic capers                      |
+| pasta with garlicscape pesto                   | italian | pistachios parmigianoreggiano cheesesalt and basil                      |
+| cheese naan                                    | indian  | aall purpose flour yougurt cheese                                       |
+| fish with white sauce                          | italian | fillet fish oil milk flour butter salt ground pepper                    |
+| cheese chicken kebabs                          | indian  | chicken thais garlic paste garlic paste yellow chili powder             |
+
+```
+   
+Kelebihan dan Kekurangan model ini adalah: 
+- Kelebihan: model ini tidak memerlukan interaksi pengguna lain, lalu model ini juga dapat memberikan rekomendasi untuk pengguna baru (cold-start pada user).
+- Kekurangan: model ini hanya cenderung merekomendasikan makanan yang mirip dengan inputan makanan yang diberikan user. Lalu, model ini juga tidak dapat belajar dari preferensi pengguna lain.
+  
+   
+3. Collaborative Filtering (CF)
+Pendekatan kedua adalah Collaborative Filtering menggunakan neural network dengan model embedding. Model ini mempelajari hubungan antara pengguna dan makanan berdasarkan histori rating yang diberikan. Setiap User_ID dan Food_ID diubah menjadi representasi numerik menggunakan LabelEncoder, lalu dipetakan ke dalam embedding layer.
+
+Langka-langkah yang dilakukan: 
+- Encode ```User_ID``` dan ```Food_ID```.
+  ```python
+  user_encoder = LabelEncoder()
+  item_encoder = LabelEncoder()
+
+  rating['user'] = user_encoder.fit_transform(rating['User_ID'])
+  rating['item'] = item_encoder.fit_transform(rating['Food_ID'])
+  ```
+- Split data menjadi data latih dan data uji.
+  ```python
+   x = rating[['user', 'item']].values
+   y = rating['Rating'].values
+
+   x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+  ```
+  Variabel input ```(x)``` didefinisikan sebagai pasangan nilai user dan item, yaitu representasi dari ID pengguna dan ID makanan yang akan digunakan sebagai fitur. Sementara itu, variabel target ```(y)``` 
+  didefinisikan sebagai nilai Rating, yaitu rating yang diberikan pengguna terhadap makanan. Selanjutnya, dataset dibagi menjadi dua bagian menggunakan fungsi ```train_test_split```, dengan proporsi 80% data 
+  untuk pelatihan (train) dan 20% untuk pengujian (test). Split dataset ini juga disetel dengan ````random_state=42```` agar hasil split data tetap konsisten saat dijalankan ulang.
+  
+- Membangun neural network dengan dua embedding layer (untuk user dan item). Lalu, menggabungkan representasi embedding dan tambahkan dense layers.
+  ```python
+   # Membangun model
+    num_users = len(user_encoder.classes_)
+    num_items = len(item_encoder.classes_)
+    embedding_size = 50
+
+    user_input = Input(shape=(1,))
+    user_embedding = Embedding(num_users, embedding_size)(user_input)
+    user_vec = Flatten()(user_embedding)
+
+    item_input = Input(shape=(1,))
+    item_embedding = Embedding(num_items, embedding_size)(item_input)
+    item_vec = Flatten()(item_embedding)
+    
+    # Concatenate + Dense layers
+    concatenated = Concatenate()([user_vec, item_vec])
+    x = Dense(128, activation='relu')(concatenated)
+    x = Dropout(0.3)(x)
+    x = Dense(64, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    output = Dense(1)(x)
+
+    model = Model([user_input, item_input], output)
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+  ```
+  Model mendefinisikan dua input utama: satu untuk pengguna ```(user_input)``` dan satu untuk item atau produk ```(item_input)```. Masing-masing input ini diubah menjadi vektor berdimensi 50 menggunakan layer Embedding, yang bertujuan untuk menangkap karakteristik pengguna dan item dalam ruang vektor. Vektor hasil embedding kemudian diratakan dengan ```Flatten```, lalu digabungkan menggunakan ```Concatenate``` untuk membentuk satu vektor fitur gabungan. Vektor ini kemudian diproses oleh dua layer ```Dense``` berturut-turut berukuran 128 dan 64 neuron dengan aktivasi ReLU, masing-masing disertai dengan Dropout 0.3 untuk mencegah overfitting. Terakhir, layer ```Dense``` berukuran 1 digunakan untuk menghasilkan output prediksi rating. Model ini dikompilasi menggunakan optimizer Adam, fungsi loss ```mean_squared_error``` untuk melatih model, dan ```mean_absolute_error``` sebagai metrik evaluasi performa.
+  
+- Melakukan training model menggunakan fungsi loss ```mean_squared_error``` dan ```mean_absolute_error``` (MAE) sebagai metric tambahan.
+```python
+   # Train model
+    model.fit([x_train[:,0], x_train[:,1]], y_train,
+          validation_data=([x_test[:,0], x_test[:,1]], y_test),
+          epochs=20, batch_size=16)
+  ```
+Output-nya adalah sebagai berikut.
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/3dc862ca-f276-4250-824f-5acfca712f96" alt="Epoch training" width="600">
+</p>
+
+Selanjutnya agar lebih jelas, kita akan melakukan visualisasi metrik dengan kode dibawah
+```python
+  plt.plot(history.history['loss'])
+  plt.plot(history.history['mae'])
+  plt.title('model_metrics')
+  plt.ylabel('root_mean_squared_error')
+  plt.xlabel('epoch')
+  plt.legend(['train', 'test'], loc='upper left')
+  plt.show()
+  ```
+Hasil visualisasi:
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bb81e497-ef4f-4410-a890-422fbaba00bb" alt="Epoch training" width="600">
+</p>
+Berdasarkan hasil visualisasi grafik pelatihan model collaborative filtering, terlihat bahwa nilai loss (root mean squared error) dan mean absolute error (MAE) pada data pelatihan dan validasi menurun secara signifikan selama beberapa epoch pertama, lalu cenderung mendatar setelahnya. Hal ini mengindikasikan bahwa model berhasil belajar dengan baik dan mencapai konvergensi. Selisih antara train loss dan validation loss juga tidak terlalu jauh, yang menunjukkan bahwa model tidak mengalami overfitting. Selain itu, nilai MAE validasi yang konsisten di kisaran 2.7 menandakan bahwa prediksi model cukup stabil dan dapat diandalkan untuk merekomendasikan makanan berdasarkan preferensi pengguna. Secara keseluruhan, performa model sudah cukup baik dan stabil untuk digunakan dalam sistem rekomendasi.
+
+Kelebihan dan Kekurangan model ini adalah: 
+- Kelebihan: model ini dapat menangkap pola kompleks dari preferensi pengguna, lalu model ini juga merekomendasi secara lebih personalized karena berdasarkan rating user lain yang mirip.
+- Kekurangan: model ini tidak bisa memberikan rekomendasi jika pengguna baru belum memberikan rating (cold-start problem), lalu model ini membutuhkan interaksi pengguna yang besar.
 
 Rubrik/Kriteria Tambahan (Opsional): 
 - Menyajikan dua solusi rekomendasi dengan algoritma yang berbeda.
@@ -270,6 +415,8 @@ Rubrik/Kriteria Tambahan (Opsional):
 - Menjelaskan formula metrik dan bagaimana metrik tersebut bekerja.
 
 ---Ini adalah bagian akhir laporan---
+## Referensi
+[1] NVIDIA, "What Is a Recommendation System?" [Online]. Available: https://www.nvidia.com/en-us/glossary/recommendation-system/. [Accessed: 20-May-2025].
 
 Catatan:
 - Anda dapat menambahkan gambar, kode, atau tabel ke dalam laporan jika diperlukan. Temukan caranya pada contoh dokumen markdown di situs editor [Dillinger](https://dillinger.io/), [Github Guides: Mastering markdown](https://guides.github.com/features/mastering-markdown/), atau sumber lain di internet. Semangat!
