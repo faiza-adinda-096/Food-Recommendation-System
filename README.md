@@ -267,7 +267,7 @@ Jumlah data uji (test): 103
 ```
 Dapat dilihat bahwa pembagian data sudah terbagi dengan jumlah pada train data sebanyak 408 dan test data sebanyak 103
 
-## Modeling and Result
+## Modelling and Result
 Pada tahap ini, dilakukan pembangunan dua jenis sistem rekomendasi untuk menyelesaikan permasalahan dalam merekomendasikan makanan kepada pengguna. Dua pendekatan yang digunakan adalah Content-Based Filtering dan Collaborative Filtering, masing-masing dengan algoritma dan data yang berbeda.
 
 ## 1. Content Based Filtering (CBF)
@@ -510,9 +510,14 @@ Pada tahap evaluasi model CF, dilakukannya visualisasi metrik. Kode di bawah ini
 Hasil visualisasi:
 
   <p align="center">
-    <img src="https://github.com/user-attachments/assets/67961471-1890-4331-9e36-980f7981895c" alt="Visualisasi metrik" width="600">
+    <img src="https://github.com/user-attachments/assets/267fa58c-dca5-49c4-84d4-3b7dcc27fe03" alt="Visualisasi metrik" width="600">
   </p>
 Berdasarkan hasil visualisasi grafik pelatihan model collaborative filtering, terlihat bahwa nilai loss (mean squared error) pada data pelatihan dan pengujian menurun secara signifikan selama beberapa epoch pertama, lalu cenderung mendatar setelahnya. Hal ini mengindikasikan bahwa model berhasil belajar dengan baik dan mencapai konvergensi. Selisih antara train loss dan test loss juga tidak terlalu jauh, yang menunjukkan bahwa model tidak mengalami overfitting secara signifikan. Selain itu, nilai MSE pada data pengujian yang konsisten di kisaran rendah menandakan bahwa prediksi model cukup stabil dan dapat diandalkan untuk merekomendasikan item berdasarkan preferensi pengguna. Secara keseluruhan, performa model sudah cukup baik dan stabil untuk digunakan dalam sistem rekomendasi.
+
+## Kesimpulan 
+Model yang dibangun dalam proyek ini berhasil menjawab seluruh problem statement dan mencapai tujuan yang telah dirumuskan pada tahap Business Understanding. Sistem rekomendasi makanan berbasis Content-Based Filtering (CBF) berhasil memberikan saran makanan yang relevan berdasarkan kemiripan konten, seperti nama, bahan, dan jenis makanan. Hal ini terbukti dari hasil evaluasi menggunakan Precision@5 yang mencapai 0.80, menandakan bahwa 80% rekomendasi yang diberikan memiliki jenis makanan yang serupa dengan input pengguna.
+
+Sementara itu, sistem berbasis Collaborative Filtering (CF) menggunakan pendekatan deep learning berhasil mempersonalisasi rekomendasi berdasarkan pola interaksi pengguna dengan makanan. Hasil evaluasi menggunakan MSE dan MAE menunjukkan performa yang cukup stabil, dengan gap yang tidak terlalu besar antara training dan testing error. Ini berarti sistem dapat memprediksi preferensi pengguna meskipun terhadap makanan yang belum pernah mereka nilai sebelumnya, **menjawab problem statement ketiga** dan **mendukung goal untuk menciptakan sistem yang akurat dan adaptif terhadap preferensi individual pengguna**. Dengan demikian, seluruh solution statements yang direncanakan dalam laporan ini telah diterapkan dan terbukti berdampak terhadap tujuan bisnis, yaitu menyediakan sistem rekomendasi makanan yang personal, relevan, dan akurat untuk meningkatkan pengalaman pengguna dalam memilih makanan.
 
 ## Referensi
 [1] NVIDIA, "What Is a Recommendation System?" [Online]. Available: https://www.nvidia.com/en-us/glossary/recommendation-system/. [Accessed: 20-May-2025].
