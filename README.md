@@ -249,18 +249,32 @@ Data statistik menunjukkan bahwa terdapat 100 pengguna dan 309 jenis makanan den
   food['Describe'] = food['Describe'].apply(clean_text)
   ```
 
+## CBF Data Preparation
+Untuk data preparation pada model CBF, dilakukannya penggabungan beberapa kolom deskriptif yaitu Name, C_Type, dan Describe menjadi satu kolom baru bernama combined. Tujuannya adalah untuk menyatukan informasi yang merepresentasikan setiap item makanan dalam bentuk teks sehingga bisa diolah lebih lanjut menggunakan TF-IDF. Penggabungan ini penting karena model CBF bekerja dengan menghitung kemiripan antar item berdasarkan deskripsi kontennya, sehingga semakin lengkap dan representatif informasi dalam kolom tersebut, semakin baik kualitas rekomendasi yang dapat dihasilkan.
+
+Penggabungan data dilakukan dengan kode di bawah:
+```python
+   food['combined'] = food['Name'] + ' ' + food['C_Type'] + ' '  + ' ' + food['Describe']
+  ```
+
+## CF Data Preparation
+Data preparation untuk model CF, tahap persiapan data dilakukan dengan mengubah ID pengguna (User_ID) dan ID makanan (Food_ID) menjadi bentuk numerik menggunakan LabelEncoder, karena model machine learning tidak dapat langsung memproses data kategorikal berbentuk string. Setelah itu, dibentuk variabel fitur x yang berisi pasangan (user, item), dan target y berupa rating yang diberikan pengguna terhadap item tersebut. Dataset ini kemudian dibagi menjadi data latih dan data uji menggunakan fungsi train_test_split, dengan proporsi 80% untuk pelatihan dan 20% untuk pengujian. Proses ini bertujuan agar model dapat dilatih dan diuji secara objektif untuk mengukur kemampuannya dalam memprediksi rating yang belum pernah dilihat.
+
+Hasil pembagian data:
+```
+Jumlah data latih (train): 408
+Jumlah data uji (test): 103
+```
+Dapat dilihat bahwa pembagian data sudah terbagi dengan jumlah pada train data sebanyak 408 dan test data sebanyak 103
+
 ## Modeling and Result
 Pada tahap ini, dilakukan pembangunan dua jenis sistem rekomendasi untuk menyelesaikan permasalahan dalam merekomendasikan makanan kepada pengguna. Dua pendekatan yang digunakan adalah Content-Based Filtering dan Collaborative Filtering, masing-masing dengan algoritma dan data yang berbeda.
 
-1. Content Based Filtering (CBF)
+## 1. Content Based Filtering (CBF)
    
     Pendekatan Content-Based Filtering dilakukan dengan memanfaatkan informasi deskriptif dari makanan, seperti nama, jenis makanan ```C_Type```, dan bahan-bahan makanan (```Describe```). Informasi ini digabungkan ke dalam satu kolom combined, kemudian dilakukan proses vektorisasi menggunakan ***TF-IDF (Term Frequency-Inverse Document Frequency)***. TF-IDF merupakan teknik yang mengukur seberapa penting suatu kata dalam sebuah dokumen relatif terhadap seluruh kumpulan dokumen. Kata-kata yang sering muncul di satu dokumen tetapi jarang muncul di dokumen lain akan memiliki bobot lebih tinggi, sehingga membantu membedakan karakteristik unik dari setiap makanan.
 
-Langka-langkah yang dilakukan: 
-- Menggabungkan fitur teks menjadi satu kolom gabungan untuk TF-IDF.
-  ```python
-   food['combined'] = food['Name'] + ' ' + food['C_Type'] + ' '  + ' ' + food['Describe']
-  ```
+Langkah-langkah yang dilakukan: 
 - Menerapkan TfidfVectorizer untuk menghasilkan representasi vektor dari teks.
   ```python
    tfidf = TfidfVectorizer(stop_words='english')
@@ -301,9 +315,9 @@ Hasil output rekomendasi dari recommend_food('pasta') mengembalikan daftar makan
 |------------------------------------------------|---------|-------------------------------------------------------------------------|
 | melted broccoli pasta with capers and anchovies| french  | broccolibread crumbs anchovy fillets garlic capers                      |
 | pasta with garlicscape pesto                   | italian | pistachios parmigianoreggiano cheesesalt and basil                      |
-| cheese naan                                    | indian  | aall purpose flour yougurt cheese                                       |
 | fish with white sauce                          | italian | fillet fish oil milk flour butter salt ground pepper                    |
 | cheese chicken kebabs                          | indian  | chicken thais garlic paste garlic paste yellow chili powder             |
+| cheese naan                                    | indian  | aall purpose flour yougurt cheese                                       |
 
 
 Dapat dilihat bahwa model berhasil merekomendasi kan 5 makanan
@@ -313,7 +327,7 @@ Kelebihan dan Kekurangan model ini adalah:
 - **Kekurangan**: model ini hanya cenderung merekomendasikan makanan yang mirip dengan inputan makanan yang diberikan user. Lalu, model ini juga tidak dapat belajar dari preferensi pengguna lain.
   
    
-2. Collaborative Filtering (CF)
+## 2. Collaborative Filtering (CF)
    
    Pendekatan kedua adalah Collaborative Filtering menggunakan neural network dengan model embedding. Model ini mempelajari hubungan antara pengguna dan makanan berdasarkan histori rating yang diberikan. Setiap     User_ID dan Food_ID diubah menjadi representasi numerik menggunakan LabelEncoder, lalu dipetakan ke dalam embedding layer.
 
@@ -403,18 +417,19 @@ Hasil pelatihan model pada epoch ke-20 menunjukkan bahwa model memiliki performa
   
   Hasil output rekomendasi dari recommend_for_user('5')
   
-  | Food_ID |                  Name                    |    C_Type     | Veg_Non |
-  |---------|------------------------------------------|---------------|---------|
-  | 69      | banana and maple ice lollies             | dessert       | veg     |
-  | 94      | chicken sukka                            | indian        | nonveg  |
-  | 105     | chicken tenders                          | snack         | nonveg  |
-  | 127     | cajun spiced turkey wrapped with bacon   | mexican       | nonveg  |
-  | 139     | surmai curry with lobster butter rice    | thai          | veg     |
-  | 172     | zucchini methi pulao                     | indian        | veg     |
-  | 196     | bread dahi vada                          | indian        | veg     |
-  | 273     | corn jalapeno poppers                    | mexican       | veg     |
-  | 276     | apple and pear cake                      | healthy food  | veg     |
-  | 282     | fruit cube salad                         | healthy food  | veg     |
+  | Food_ID | Name                                 | C_Type        | Veg_Non |
+  |---------|--------------------------------------|---------------|---------|
+  | 1       | summer squash salad                  | healthy food  | veg     |
+  | 73      | hot chocolate                        | beverage      | veg     |
+  | 94      | chicken sukka                        | indian        | nonveg  |
+  | 105     | chicken tenders                      | snack         | nonveg  |
+  | 139     | surmai curry with lobster butter rice| thai          | veg     |
+  | 155     | chilli fish                          | chinese       | nonveg  |
+  | 172     | zucchini methi pulao                 | indian        | veg     |
+  | 196     | bread dahi vada                      | indian        | veg     |
+  | 258     | lamb korma                           | indian        | nonveg  |
+  | 282     | fruit cube salad                     | healthy food  | veg     |
+
   
   Dapat dilihat bahwa model berhasil merekomendasi kan 10 makanan pada user dengan userID 5
 
